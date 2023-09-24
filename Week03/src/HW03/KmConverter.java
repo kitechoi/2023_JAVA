@@ -43,7 +43,6 @@ public class KmConverter extends JFrame{
             }
         });
 
-		
 		setSize(500, 150);
 		setTitle("Mile->Km");
 		setVisible(true);

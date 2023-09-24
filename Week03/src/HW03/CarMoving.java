@@ -16,7 +16,7 @@ public class CarMoving extends JFrame{
 
 	
 	public CarMoving() {
-		ImageIcon icon = new ImageIcon("car1.jpeg");
+		ImageIcon icon = new ImageIcon("car1.jpg");
 		img = icon.getImage();
 		setSize(500,300);
 		add(new MyPanel(), BorderLayout.CENTER);

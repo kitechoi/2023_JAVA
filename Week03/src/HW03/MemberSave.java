@@ -23,7 +23,6 @@ public class MemberSave extends JFrame{
 		JLabel label0 = new JLabel("회원 등록하기");	
 	    label0.setFont(new Font(label0.getName(), Font.BOLD, 15));
 		panel0.add(label0);
-		
 	
 		panel1.add(new JLabel("이름    "));
 		panel1.add(new JTextField(10)); 
