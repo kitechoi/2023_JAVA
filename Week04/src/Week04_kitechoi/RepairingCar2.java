@@ -20,7 +20,7 @@ public class RepairingCar2 extends JPanel implements ItemListener {
     public RepairingCar2() {
         super();
 
-        // 체크박스와 레이블 생성..
+        // 체크박스와 레이블 생성...
         for (int i = 0; i < buttons.length; i++) {
             buttons[i] = new JCheckBox(items[i]);
             buttons[i].addItemListener(this);

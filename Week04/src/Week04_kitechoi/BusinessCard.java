@@ -34,7 +34,7 @@ public class BusinessCard extends JFrame {
             // 이미지를 그립니다.
             g.drawImage(img, img_x, img_y, 80, 80, this);
 
-            // 텍스트를 그립니다...
+            // 텍스트를 그립니다....
 
             g.drawString("최연", 120, 40);
             g.drawString("개발자 지망생 & 사이버보안학과 학생", 120, 60);

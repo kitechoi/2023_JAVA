@@ -65,7 +65,7 @@ public class TelNumber extends JFrame {
 		
 	}
 	/**
-	 * Create.. the frame
+	 * Create... the frame
 	 */
 	
 	public TelNumber() {
