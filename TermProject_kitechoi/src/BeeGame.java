@@ -175,7 +175,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
             for (int j = 0; j < specialEnemies.size(); j++) {
                 Enemy enemy = specialEnemies.get(j);
                 if (bullet.getRectangle().intersects(enemy.getRectangle())) {
-                    score += 50; // 특별 이벤트 적 점수
+                    score -= 50; // 특별 이벤트 적 점수
                     specialEnemies.remove(j);
                     bullets.remove(i);
                     i--;
@@ -233,7 +233,7 @@ class Player {
     int x, y;
     int dx; // x축 이동 속도
     private BufferedImage playerImg;
-    private int width = 60; // 플레이어 너비
+    private int width = 80; // 플레이어 너비
     private int height = 80; // 플레이어 높이
 
     public Player(int x, int windowHeight) {
