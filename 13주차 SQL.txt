@@ -1,0 +1,39 @@
+CREATE DATABASE boards;
+
+--users 테이블 만들기
+use boards;
+
+CREATE TABLE users(
+    userid varchar(50) primary key,
+    username varchar(50) not null,
+    userpassword varchar(50) not null,
+    userage INT(3) not null,
+    useremail varchar(50) not null
+    );
+
+--boards 테이블 만들기
+use boards;
+CREATE TABLE boards (
+    bno             INT             primary key auto_increment,
+    btitle          varchar(100)    not null,
+    bcontent        longtext        not null,
+    bwriter         varchar(50)     not null,
+    bdate           datetime        default now(),
+    bfilename       varchar(50)     null,
+    bfiledata	    longblob        null
+);
+
+--boards 테이블 만들기 및 데이터 추가
+use boards;
+CREATE TABLE accounts (
+  ano       varchar(20)   primary key,
+  owner     varchar(20)   not null,
+  balance   int           not null
+);
+
+insert into accounts (ano, owner, balance) 
+values ('111-111-1111', '하여름', 1000000);
+
+insert into accounts (ano, owner, balance) 
+values ('222-222-2222', '한겨울', 0);
+

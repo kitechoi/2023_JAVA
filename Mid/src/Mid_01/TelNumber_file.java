@@ -1,0 +1,184 @@
+//package Mid_01;
+//
+//
+//import java.awt.BorderLayout;
+//import java.awt.EventQueue;
+//import java.io.*;
+//import java.util.ArrayList;
+//
+//import javax.swing.JFrame;
+//import javax.swing.JPanel;
+//import javax.swing.border.EmptyBorder;
+//import javax.swing.JLabel;
+//import javax.swing.JTextField;
+//import javax.swing.JTextArea;
+//import javax.swing.JButton;
+//
+//class Student {
+//    String name;
+//    String tel;
+//    String address;
+//
+//    public String getName() {
+//        return name;
+//    }
+//    public void setName(String name) {
+//        this.name = name;
+//    }
+//    public String getTel() {
+//        return tel;
+//    }
+//    public void setTel(String tel) {
+//        this.tel = tel;
+//    }
+//    public String getAddress() {
+//        return address;
+//    }
+//    public void setAddress(String address) {
+//        this.address = address;
+//    }
+//    public Person(String name, String tel,  String address) {
+//        super();
+//        this.name = name;
+//        this.tel = tel;
+//        this.address = address;
+//    }
+//}
+//public class TelNumber_file extends JFrame {
+//    ArrayList<Person> list = new ArrayList<>();
+//    private JPanel contentPane;
+//    private JTextField textField;
+//    private JTextField textField_1;
+//
+//    /**
+//     * Launch the application.
+//     */
+//    public static void main(String[] args) {
+//        EventQueue.invokeLater(new Runnable() {
+//            public void run() {
+//                try {
+//                    TelNumber_file frame = new TelNumber_file();
+//                    frame.setVisible(true);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
+//    }
+//
+//    /**
+//     * Create the frame.
+//     */
+//
+//    public TelNumber_file() {
+//        setTitle("Address Book");
+//        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        setBounds(100, 100, 360, 252);
+//        contentPane = new JPanel();
+//        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+//        setContentPane(contentPane);
+//        contentPane.setLayout(null);
+//
+//        JLabel lblNewLabel = new JLabel("이름");
+//        lblNewLabel.setBounds(12, 10, 57, 15);
+//        contentPane.add(lblNewLabel);
+//
+//        JLabel lblNewLabel_1 = new JLabel("전화번호");
+//        lblNewLabel_1.setBounds(12, 42, 57, 15);
+//        contentPane.add(lblNewLabel_1);
+//
+////        이름필드
+//        textField = new JTextField();
+//        textField.setBounds(81, 7, 243, 21);
+//        contentPane.add(textField);
+//        textField.setColumns(10);
+////        전번필드
+//        textField_1 = new JTextField();
+//        textField_1.setColumns(10);
+//        textField_1.setBounds(81, 39, 243, 21);
+//        contentPane.add(textField_1);
+//
+//        JLabel lblNewLabel_2 = new JLabel("주소");
+//        lblNewLabel_2.setBounds(12, 79, 57, 15);
+//        contentPane.add(lblNewLabel_2);
+//
+//        JTextArea textArea = new JTextArea();
+//        textArea.setBounds(12, 104, 312, 67);
+//        contentPane.add(textArea);
+//
+//        JButton btnNewButton = new JButton("저장");
+//        btnNewButton.setBounds(12, 181, 97, 23);
+//        contentPane.add(btnNewButton);
+//        btnNewButton.addActionListener(e->{
+//            String name = textField.getText();
+//            String tel = textField_1.getText();
+//            String address = textArea.getText();
+//            list.add(new Person(name, tel, address));
+//
+//            //***   연락처 정보를 파일에 저장 . 저장 버튼을 클릭할 때
+//            saveToFile(name, tel, address);
+//        });
+//
+//
+////*****  파일로 저장된 걸 검색
+//        JButton btnNewButton_1 = new JButton("검색");
+//        btnNewButton_1.setBounds(117, 181, 97, 23);
+//        contentPane.add(btnNewButton_1);
+//        btnNewButton_1.addActionListener(e -> {
+//            String nameToSearch = textField.getText();
+//            String telNumber = searchByName(nameToSearch);
+//            if (telNumber != null) {
+////              textField_1에 검색 결과 매핑값 넣겠다
+//                textField_1.setText(telNumber);
+////                System.out.println("헤헤 잘 넣음");
+//            } else {
+//                textField_1.setText(""); // Clear the text field if not found
+//            }
+//        });
+//
+//        JButton btnNewButton_1_1 = new JButton("종료");
+//        btnNewButton_1_1.setBounds(227, 181, 97, 23);
+//        contentPane.add(btnNewButton_1_1);
+//        btnNewButton_1_1.addActionListener(e->{
+//            System.exit(0);
+//        });
+//
+//    }
+//
+//    //***** 파일로 저장된 걸 검색 ㅠㅠ!!
+//    private String searchByName(String nameToSearch) {
+//        String result = null;
+//        try (BufferedReader reader = new BufferedReader(new FileReader("address_book.txt"))) {
+//            String line;
+//            while ((line = reader.readLine()) != null) {
+//                if (line.contains("이름: " + nameToSearch)) {
+//                    // Extract the telephone number from the line
+//                    String[] parts = line.split(", ");
+//                    for (String part : parts) {
+//                        if (part.startsWith("전화번호: ")) {
+//                            result = part.substring(5);
+//                            break;
+//                        }
+//                    }
+//                    break;
+//                }
+//            }
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//        return result;
+//    }
+//
+//
+//    //**** 파일 형태로 저장
+//    private void saveToFile(String name, String tel, String address) {
+//        try (PrintWriter writer = new PrintWriter(new FileWriter("address_book.txt", true))) {
+//            writer.println("이름: " + name +", "+ "전화번호: " + tel +", "+ "주소: " + address);
+////            writer.println("전화번호: " + tel);
+////            writer.println("주소: " + address);
+////            writer.println(); // 연락처 정보 사이에 빈 줄 추가
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//    }
+//}
