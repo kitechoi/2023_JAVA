@@ -11,7 +11,7 @@ import java.io.File;
 
 // 메인 클래스---------------------------------------------------------------------->
 public class BeeGame extends JFrame {
-    private static final int WINDOW_WIDTH = 800;
+    protected static final int WINDOW_WIDTH = 800;
     private static final int WINDOW_HEIGHT = 600;
 
     public BeeGame() {
@@ -67,7 +67,10 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
     }
 
     public void addSpecialEnemy() {
-        specialEnemies.add(new Enemy(new Random().nextInt(750), 0, true)); // 특별 이벤트 적 추가
+        int enemyWidth = 40; // 적의 너비
+        int margin = 80; // 여백
+        int enemySpawnX = new Random().nextInt(BeeGame.WINDOW_WIDTH - enemyWidth - 2 * margin) + margin;
+        specialEnemies.add(new Enemy(enemySpawnX, 0, true));
     }
 
     private void checkGameOver() {
@@ -116,16 +119,22 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
         }
         // 점수 표시
         g.setColor(Color.BLACK);
-        g.setFont(new Font("Arial", Font.BOLD, 20));
+        g.setFont(new Font("Serif", Font.BOLD, 20));
         g.drawString("Score: " + score, 650, 30);
     }
 
-    @Override
     public void actionPerformed(ActionEvent e) {
         player.move();
-        if (new Random().nextInt(100) < 2) {
-            enemies.add(new Enemy(new Random().nextInt(750), 0, false));
+
+        // 적 생성 조절: 화면에 적이 6개 미만일 때만 새로운 적 생성
+        if (enemies.size() < 6 && new Random().nextInt(100) < 5) { // 5% 확률로 적 생성
+            int enemyWidth = 40;
+            int margin = 80;
+            int enemySpawnX = generateNonOverlappingPosition(enemyWidth, margin);
+            enemies.add(new Enemy(enemySpawnX, 0, false));
         }
+
+        // 적 이동 및 제거 로직
         for (int i = 0; i < enemies.size(); i++) {
             enemies.get(i).move();
             if (enemies.get(i).y > 600) {
@@ -133,6 +142,8 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
                 i--;
             }
         }
+
+        // 특별 이벤트 적 이동 및 제거 로직
         for (int i = 0; i < specialEnemies.size(); i++) {
             specialEnemies.get(i).move();
             if (specialEnemies.get(i).y > 600) {
@@ -140,6 +151,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
                 i--;
             }
         }
+
         for (int i = 0; i < bullets.size(); i++) {
             bullets.get(i).move();
             if (bullets.get(i).y < 0) {
@@ -151,7 +163,22 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
         checkSpecialCollision();
         repaint();
     }
-
+    // 적 겹침 방지를 위한 위치 생성 메서드
+    private int generateNonOverlappingPosition(int enemyWidth, int margin) {
+        int enemySpawnX;
+        boolean positionValid;
+        do {
+            enemySpawnX = new Random().nextInt(BeeGame.WINDOW_WIDTH - enemyWidth - 2 * margin) + margin;
+            positionValid = true;
+            for (Enemy enemy : enemies) {
+                if (Math.abs(enemy.x - enemySpawnX) < enemyWidth) { // 이미 존재하는 적과 위치가 겹치지 않도록 체크
+                    positionValid = false;
+                    break;
+                }
+            }
+        } while (!positionValid);
+        return enemySpawnX;
+    }
     private void checkCollision() {
         for (int i = 0; i < bullets.size(); i++) {
             Bullet bullet = bullets.get(i);
@@ -197,6 +224,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+
     @Override
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()) {
@@ -207,11 +235,14 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
                 player.dx = 5;
                 break;
             case KeyEvent.VK_SPACE:
-                bullets.add(new Bullet(player.x + 20, player.y));
+                // 플레이어 중앙에서 벌침 시작
+                int bulletStartX = player.x + player.width / 2 - 2;
+                bullets.add(new Bullet(bulletStartX, player.y));
                 playSound("shoot.wav");
                 break;
         }
     }
+
 
     @Override
     public void keyReleased(KeyEvent e) {
@@ -233,14 +264,14 @@ class Player {
     int x, y;
     int dx; // x축 이동 속도
     private BufferedImage playerImg;
-    private int width = 80; // 플레이어 너비
+    protected int width = 80; // 플레이어 너비
     private int height = 80; // 플레이어 높이
 
     public Player(int x, int windowHeight) {
         this.x = x;
         this.y = windowHeight - this.height; // 화면 하단에 맞춤
         try {
-            playerImg = ImageIO.read(new File("bee_img.png")); // 플레이어 이미지 로드
+            playerImg = ImageIO.read(new File("bee_img.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -249,7 +280,7 @@ class Player {
     public void move() {
         x += dx;
         if (x < 0) x = 0;
-        if (x > 760 - width) x = 760 - width;
+        if (x > 780 - width) x = 780 - width;
     }
 
     public void draw(Graphics g) {
@@ -274,7 +305,7 @@ class Enemy {
         this.y = y;
         this.isSpecial = isSpecial;
         try {
-            enemyImg = ImageIO.read(new File(isSpecial ? "special_enemy_img.png" : "cup_img.png")); // 특별 이벤트 적은 다른 이미지
+            enemyImg = ImageIO.read(new File(isSpecial ? "special_enemy_img.png" : "cup_img.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -292,8 +323,13 @@ class Enemy {
     }
 
     public Rectangle getRectangle() {
-        return new Rectangle(x, y, width, height);
+        if (isSpecial) {
+            return new Rectangle(x, y, width * 2, height * 2);
+        } else {
+            return new Rectangle(x, y, width, height);
+        }
     }
+
 
     public void draw(Graphics g) {
         if (isSpecial) {
@@ -303,30 +339,6 @@ class Enemy {
             // 일반 적의 경우 기존 크기 유지
             g.drawImage(enemyImg, x, y, width, height, null);
         }
-    }
-}
-
-// 벌침 클래스 ------------------------------------------------------------------------------->
-class Bullet {
-    int x, y;
-    int dy = -10; // y축 이동 속도
-
-    public Bullet(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public void move() {
-        y += dy;
-    }
-
-    public Rectangle getRectangle() {
-        return new Rectangle(x, y, 5, 10);
-    }
-
-    public void draw(Graphics g) {
-        g.setColor(Color.BLACK);
-        g.fillRect(x, y, 5, 10);
     }
 }
 
@@ -357,5 +369,29 @@ class SpecialEnemyThread extends Thread {
 
     public void stopRunning() {
         running = false;
+    }
+}
+
+// 벌침 클래스 ------------------------------------------------------------------------------->
+class Bullet {
+    int x, y;
+    int dy = -10; // y축 이동 속도
+
+    public Bullet(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public void move() {
+        y += dy;
+    }
+
+    public Rectangle getRectangle() {
+        return new Rectangle(x, y, 5, 10);
+    }
+
+    public void draw(Graphics g) {
+        g.setColor(Color.BLACK);
+        g.fillRect(x, y, 5, 10);
     }
 }
