@@ -74,7 +74,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
         if (System.currentTimeMillis() - startTime > 30000) {
             timer.stop();
             gameTimer.stop();
-            specialEnemyThread.stopRunning(); // 특별 이벤트 적 스레드 종료
+            specialEnemyThread.interrupt();
             String message;
 
             if (score >= 300) {
@@ -90,6 +90,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
             JOptionPane.showMessageDialog(this, "게임 종료! 점수: " + score + "\n" + message);
         }
     }
+
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -175,7 +176,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
             for (int j = 0; j < specialEnemies.size(); j++) {
                 Enemy enemy = specialEnemies.get(j);
                 if (bullet.getRectangle().intersects(enemy.getRectangle())) {
-                    score -= 50; // 특별 이벤트 적 점수
+                    score += 50; // 특별 이벤트 적 점수
                     specialEnemies.remove(j);
                     bullets.remove(i);
                     i--;
@@ -207,11 +208,14 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
                 player.dx = 5;
                 break;
             case KeyEvent.VK_SPACE:
-                bullets.add(new Bullet(player.x + 20, player.y));
+                // 플레이어 중앙에서 벌침 시작
+                int bulletStartX = player.x + player.width / 2 - 2; // 벌침 너비를 고려 (벌침 너비가 5이므로 절반인 2.5를 반올림하여 3으로 설정)
+                bullets.add(new Bullet(bulletStartX, player.y));
                 playSound("shoot.wav");
                 break;
         }
     }
+
 
     @Override
     public void keyReleased(KeyEvent e) {
@@ -233,7 +237,7 @@ class Player {
     int x, y;
     int dx; // x축 이동 속도
     private BufferedImage playerImg;
-    private int width = 80; // 플레이어 너비
+    protected int width = 80; // 플레이어 너비
     private int height = 80; // 플레이어 높이
 
     public Player(int x, int windowHeight) {
@@ -253,7 +257,7 @@ class Player {
     }
 
     public void draw(Graphics g) {
-        g.drawImage(playerImg, x, y, width, height, null); // 이미지 크기 조정하여 그리기
+        g.drawImage(playerImg, x, y, width, height, null);
     }
 }
 
@@ -274,9 +278,16 @@ class Enemy {
         this.y = y;
         this.isSpecial = isSpecial;
         try {
-            enemyImg = ImageIO.read(new File(isSpecial ? "special_enemy_img.png" : "cup_img.png")); // 특별 이벤트 적은 다른 이미지
+            enemyImg = ImageIO.read(new File(isSpecial ? "special_enemy_img.png" : "cup_img.png"));
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        // 속도 설정
+        if (isSpecial) {
+            dy = 1; // 스페셜 적의 경우 더 느린 속도
+        } else {
+            dy = 2; // 일반 적의 속도
         }
     }
 
@@ -290,7 +301,7 @@ class Enemy {
 
     public void draw(Graphics g) {
         if (isSpecial) {
-            // 특별 이벤트 적의 경우 이미지 크기를 2배로 늘림
+            // 스페셜 적의 경우 이미지 크기를 2배로 늘림
             g.drawImage(enemyImg, x, y, width * 2, height * 2, null);
         } else {
             // 일반 적의 경우 기존 크기 유지
@@ -326,29 +337,19 @@ class Bullet {
 // 특별 적 클래스 ------------------------------------------------------------------------>
 class SpecialEnemyThread extends Thread {
     private GamePanel gamePanel;
-    private Random random;
-    private boolean running;
 
     public SpecialEnemyThread(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
-        this.random = new Random();
-        this.running = true;
     }
 
     public void run() {
-        while (running) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
-                Thread.sleep(random.nextInt(10000) + 5000); // 5-15초 사이 무작위 대기
-                if (running) {
-                    gamePanel.addSpecialEnemy();
-                }
+                Thread.sleep(new Random().nextInt(10000) + 5000);
+                gamePanel.addSpecialEnemy();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
             }
         }
-    }
-
-    public void stopRunning() {
-        running = false;
     }
 }
