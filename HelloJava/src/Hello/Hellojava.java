@@ -1,6 +1,6 @@
 package Hello;
 import java.util.Scanner;
-//이클립스연동토큰 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
+
 
 public class Hellojava {
 	public static void main(String[] args) {
