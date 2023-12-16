@@ -9,7 +9,7 @@ import java.util.Random;
 import javax.sound.sampled.*;
 import java.io.File;
 
-// 메인 클래스----------------------------------------------------------->
+// 메인 클래스---------------------------------------------------------------------->
 public class BeeGame extends JFrame {
     private static final int WINDOW_WIDTH = 800;
     private static final int WINDOW_HEIGHT = 600;
@@ -27,15 +27,17 @@ public class BeeGame extends JFrame {
     }
 }
 
-// 게임 패널------------------------------------------------------------>
+// 게임 패널 클래스----------------------------------------------------------------------------------->
 class GamePanel extends JPanel implements ActionListener, KeyListener {
     private Timer timer, gameTimer;
     private Player player;
     private ArrayList<Enemy> enemies;
+    private ArrayList<Enemy> specialEnemies;
     private ArrayList<Bullet> bullets;
     private int score;
     private long startTime;
     private BufferedImage bg_img;
+    private SpecialEnemyThread specialEnemyThread;
 
     public GamePanel(int windowHeight) {
         setFocusable(true);
@@ -51,6 +53,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
 
         player = new Player(400, windowHeight - 40);
         enemies = new ArrayList<>();
+        specialEnemies = new ArrayList<>();
         bullets = new ArrayList<>();
         score = 0;
         timer = new Timer(10, this);
@@ -58,13 +61,20 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
         startTime = System.currentTimeMillis();
         timer.start();
         gameTimer.start();
+
+        specialEnemyThread = new SpecialEnemyThread(this);
+        specialEnemyThread.start();
     }
 
-    // 게임 점수 ----------------------->
+    public void addSpecialEnemy() {
+        specialEnemies.add(new Enemy(new Random().nextInt(750), 0, true)); // 특별 이벤트 적 추가
+    }
+
     private void checkGameOver() {
         if (System.currentTimeMillis() - startTime > 30000) {
             timer.stop();
             gameTimer.stop();
+            specialEnemyThread.stopRunning(); // 특별 이벤트 적 스레드 종료
             String message;
 
             if (score >= 300) {
@@ -77,11 +87,10 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
                 message = "분발하세요!";
             }
 
-            JOptionPane.showMessageDialog(this, "게임 종료!  점수: " + score + "\n" + message);
+            JOptionPane.showMessageDialog(this, "게임 종료! 점수: " + score + "\n" + message);
         }
     }
 
-    // 그리기 ------------------------------->
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -97,6 +106,10 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
         for (Enemy enemy : enemies) {
             enemy.draw(g);
         }
+        // 특별 이벤트 적 그리기
+        for (Enemy enemy : specialEnemies) {
+            enemy.draw(g);
+        }
         // 총알 그리기
         for (Bullet bullet : bullets) {
             bullet.draw(g);
@@ -104,19 +117,26 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
         // 점수 표시
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 20));
-        g.drawString("score: " + score, 650, 30);
+        g.drawString("Score: " + score, 650, 30);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         player.move();
         if (new Random().nextInt(100) < 2) {
-            enemies.add(new Enemy(new Random().nextInt(750), 0));
+            enemies.add(new Enemy(new Random().nextInt(750), 0, false));
         }
         for (int i = 0; i < enemies.size(); i++) {
             enemies.get(i).move();
             if (enemies.get(i).y > 600) {
                 enemies.remove(i);
+                i--;
+            }
+        }
+        for (int i = 0; i < specialEnemies.size(); i++) {
+            specialEnemies.get(i).move();
+            if (specialEnemies.get(i).y > 600) {
+                specialEnemies.remove(i);
                 i--;
             }
         }
@@ -128,6 +148,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
             }
         }
         checkCollision();
+        checkSpecialCollision();
         repaint();
     }
 
@@ -139,6 +160,23 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
                 if (bullet.getRectangle().intersects(enemy.getRectangle())) {
                     score += 10;
                     enemies.remove(j);
+                    bullets.remove(i);
+                    i--;
+                    playSound("hit.wav");
+                    break;
+                }
+            }
+        }
+    }
+
+    private void checkSpecialCollision() {
+        for (int i = 0; i < bullets.size(); i++) {
+            Bullet bullet = bullets.get(i);
+            for (int j = 0; j < specialEnemies.size(); j++) {
+                Enemy enemy = specialEnemies.get(j);
+                if (bullet.getRectangle().intersects(enemy.getRectangle())) {
+                    score += 50; // 특별 이벤트 적 점수
+                    specialEnemies.remove(j);
                     bullets.remove(i);
                     i--;
                     playSound("hit.wav");
@@ -190,7 +228,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
     }
 }
 
-// 플레이어 클래스-------------------------------------------------------------->
+// 플레이어 클래스----------------------------------------------------------------------------------->
 class Player {
     int x, y;
     int dx; // x축 이동 속도
@@ -200,7 +238,6 @@ class Player {
 
     public Player(int x, int windowHeight) {
         this.x = x;
-        this.height = 80; // 플레이어 이미지 높이 설정
         this.y = windowHeight - this.height; // 화면 하단에 맞춤
         try {
             playerImg = ImageIO.read(new File("bee_img.png")); // 플레이어 이미지 로드
@@ -220,8 +257,7 @@ class Player {
     }
 }
 
-
-// 적 클래스------------------------------------------------------------------------>
+// 적 클래스---------------------------------------------------------------------------------->
 class Enemy {
     int x, y;
     int dy = 2; // y축 이동 속도
@@ -229,11 +265,16 @@ class Enemy {
     private int width = 40; // 적 너비
     private int height = 50; // 적 높이
 
-    public Enemy(int x, int y) {
+    private boolean isSpecial; // 특별 이벤트 적 여부
+
+
+
+    public Enemy(int x, int y, boolean isSpecial) {
         this.x = x;
         this.y = y;
+        this.isSpecial = isSpecial;
         try {
-            enemyImg = ImageIO.read(new File("cup_img.png")); // 적 이미지 로드
+            enemyImg = ImageIO.read(new File(isSpecial ? "special_enemy_img.png" : "cup_img.png")); // 특별 이벤트 적은 다른 이미지
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -248,7 +289,13 @@ class Enemy {
     }
 
     public void draw(Graphics g) {
-        g.drawImage(enemyImg, x, y, width, height, null); // 이미지 크기 조정하여 그리기
+        if (isSpecial) {
+            // 특별 이벤트 적의 경우 이미지 크기를 2배로 늘림
+            g.drawImage(enemyImg, x, y, width * 2, height * 2, null);
+        } else {
+            // 일반 적의 경우 기존 크기 유지
+            g.drawImage(enemyImg, x, y, width, height, null);
+        }
     }
 }
 
@@ -273,5 +320,35 @@ class Bullet {
     public void draw(Graphics g) {
         g.setColor(Color.BLACK);
         g.fillRect(x, y, 5, 10);
+    }
+}
+
+// 특별 적 클래스 ------------------------------------------------------------------------>
+class SpecialEnemyThread extends Thread {
+    private GamePanel gamePanel;
+    private Random random;
+    private boolean running;
+
+    public SpecialEnemyThread(GamePanel gamePanel) {
+        this.gamePanel = gamePanel;
+        this.random = new Random();
+        this.running = true;
+    }
+
+    public void run() {
+        while (running) {
+            try {
+                Thread.sleep(random.nextInt(10000) + 5000); // 5-15초 사이 무작위 대기
+                if (running) {
+                    gamePanel.addSpecialEnemy();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void stopRunning() {
+        running = false;
     }
 }
