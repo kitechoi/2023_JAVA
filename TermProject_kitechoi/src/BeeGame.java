@@ -62,13 +62,14 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
         timer.start();
         gameTimer.start();
 
+        // 쓰레드 실행
         specialEnemyThread = new SpecialEnemyThread(this);
         specialEnemyThread.start();
     }
 
     public void addSpecialEnemy() {
-        int enemyWidth = 40; // 적의 너비
-        int margin = 80; // 여백
+        int enemyWidth = 40;
+        int margin = 80;
         int enemySpawnX = new Random().nextInt(BeeGame.WINDOW_WIDTH - enemyWidth - 2 * margin) + margin;
         specialEnemies.add(new Enemy(enemySpawnX, 0, true));
     }
@@ -77,7 +78,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
         if (System.currentTimeMillis() - startTime > 30000) {
             timer.stop();
             gameTimer.stop();
-            specialEnemyThread.stopRunning(); // 특별 이벤트 적 스레드 종료
+            specialEnemyThread.stopRunning();
             String message;
 
             if (score >= 300) {
@@ -98,26 +99,24 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // 배경 이미지 그리기
         if (bg_img != null) {
             g.drawImage(bg_img, 0, 0, getWidth(), getHeight(), null);
         }
 
-        // 플레이어 그리기
         player.draw(g);
-        // 적 그리기
+
         for (Enemy enemy : enemies) {
             enemy.draw(g);
         }
-        // 특별 이벤트 적 그리기
+
         for (Enemy enemy : specialEnemies) {
             enemy.draw(g);
         }
-        // 총알 그리기
+
         for (Bullet bullet : bullets) {
             bullet.draw(g);
         }
-        // 점수 표시
+
         g.setColor(Color.BLACK);
         g.setFont(new Font("Serif", Font.BOLD, 20));
         g.drawString("Score: " + score, 650, 30);
@@ -134,7 +133,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
             enemies.add(new Enemy(enemySpawnX, 0, false));
         }
 
-        // 적 이동 및 제거 로직
+        // 적 이동 및 제거
         for (int i = 0; i < enemies.size(); i++) {
             enemies.get(i).move();
             if (enemies.get(i).y > 600) {
@@ -143,7 +142,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
             }
         }
 
-        // 특별 이벤트 적 이동 및 제거 로직
+        // 특별 적 이동 및 제거
         for (int i = 0; i < specialEnemies.size(); i++) {
             specialEnemies.get(i).move();
             if (specialEnemies.get(i).y > 600) {
@@ -152,6 +151,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
             }
         }
 
+        // 벌침 제거
         for (int i = 0; i < bullets.size(); i++) {
             bullets.get(i).move();
             if (bullets.get(i).y < 0) {
@@ -163,6 +163,7 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
         checkSpecialCollision();
         repaint();
     }
+
     // 적 겹침 방지를 위한 위치 생성 메서드
     private int generateNonOverlappingPosition(int enemyWidth, int margin) {
         int enemySpawnX;
@@ -179,13 +180,15 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
         } while (!positionValid);
         return enemySpawnX;
     }
+
+    // 적이 벌침 맞았을 때
     private void checkCollision() {
         for (int i = 0; i < bullets.size(); i++) {
             Bullet bullet = bullets.get(i);
             for (int j = 0; j < enemies.size(); j++) {
                 Enemy enemy = enemies.get(j);
                 if (bullet.getRectangle().intersects(enemy.getRectangle())) {
-                    score += 10;
+                    score += 10;    // 10점 ++
                     enemies.remove(j);
                     bullets.remove(i);
                     i--;
@@ -196,13 +199,14 @@ class GamePanel extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    // 특별 적이 벌침 맞았을 때
     private void checkSpecialCollision() {
         for (int i = 0; i < bullets.size(); i++) {
             Bullet bullet = bullets.get(i);
             for (int j = 0; j < specialEnemies.size(); j++) {
                 Enemy enemy = specialEnemies.get(j);
                 if (bullet.getRectangle().intersects(enemy.getRectangle())) {
-                    score -= 50; // 특별 이벤트 적 점수
+                    score -= 50; // 50점 --
                     specialEnemies.remove(j);
                     bullets.remove(i);
                     i--;
@@ -295,7 +299,6 @@ class Enemy {
     private BufferedImage enemyImg;
     private int width = 40; // 적 너비
     private int height = 50; // 적 높이
-
     private boolean isSpecial; // 특별 이벤트 적 여부
 
 
